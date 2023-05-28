@@ -1,8 +1,8 @@
-Telegram bot project
+# Telegram bot project
 
+## Theme of bot
 
-
-
-
-
-lalala
+- bot can 1
+- bot can 2
+- bot can 3
+- bot can 4
