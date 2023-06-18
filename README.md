@@ -7,3 +7,4 @@
 - bot can 3
 - bot can 4
 - bot can 5
+- bot can 5.1
