@@ -6,3 +6,4 @@
 - bot can 2
 - bot can 3
 - bot can 4
+- bot can 5
