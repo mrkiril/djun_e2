@@ -2,11 +2,11 @@ import os
 
 import logging
 import asyncio
+import time
 
 from aiogram import Bot, Dispatcher, Router, types
 from aiogram.filters import Command, CommandObject
-from aiogram.types import Message
-from dotenv import load_dotenv
+from aiogram.types import Message, URLInputFile
 from aiogram import html
 
 from aiogram import F
@@ -22,6 +22,10 @@ dp = Dispatcher()
 
 # All handlers should be attached to the Router (or Dispatcher)
 router = Router()
+
+
+def user_name(message: Message):
+    return html.quote(message.from_user.full_name)  #
 
 
 @router.message(Command(commands=["start1"]))
@@ -50,8 +54,33 @@ async def any_message(message: types.Message):
     await message.answer("Сообщение без <s>какой-либо разметки</s>", parse_mode=None)
 
 
-# TODO: Homework add more pretty tags here
+@router.message(Command("fuck"))
+async def any_message(message: types.Message):
+    await message.reply(f"Hello, {html.bold(html.italic(user_name(message)))}!", parse_mode="HTML")
 
+
+@router.message(Command("random_image"))
+async def get_random_image(message: types.Message) -> None:
+    """
+    /random_image 500 600
+    /random_image 500 -> Required 2 params but 1 given
+    /random_image 500 500 500-> Required 2 params but 3 given
+    /random_image -> Required 2 params but 0 given
+    :param message:
+    :return:
+    """
+    # Отправка файла по ссылке
+    start_time = time.time()
+    image_from_url = URLInputFile("https://picsum.photos/seed/groosha/400/300")
+    result = await message.answer_photo(
+        image_from_url,
+        caption="Зображення по лінку"
+    )
+    await message.answer(f"Load image time is {round(time.time() - start_time, 2)}s")
+
+#
+# # TODO: Homework add more pretty tags here
+#
 @router.message(Command("dice"))
 async def cmd_dice(message: types.Message):
     """
@@ -64,11 +93,11 @@ async def cmd_dice(message: types.Message):
     :param message:
     :return:
     """
-    await message.answer_dice(emoji="🎳")
+    await message.answer_dice(emoji="🎰")
 
 
 from aiogram.enums.dice_emoji import DiceEmoji
-
+#
 @router.message(Command("dice2"))
 async def cmd_dice(message: types.Message):
     """
@@ -81,40 +110,44 @@ async def cmd_dice(message: types.Message):
     :param message:
     :return:
     """
-    await message.answer_dice(emoji=DiceEmoji.SLOT_MACHINE)
+    await message.answer_dice(emoji=DiceEmoji.DART)
 
 
 @router.message(Command("name"))
 async def cmd_name(message: types.Message, command: CommandObject):
     """
-    command.args -> nora -> Hello HY
+    command.args -> nora -> Hello NY
     command.args -> nono -> Hello LA
     command.args -> nana -> Hello LA
+    command.args -> tttt -> Hello IOWA
     :param message:
     :param command:
     :return:
     """
     name = html.quote(command.args)
-    if name:
-        await message.answer(f"Hello, <b>{name}</b>")
-    elif "a" in name:
-        await message.answer(f"Hello, <b>{name}</b> !!!!!")
-    else:
-        await message.answer("Pls, enter your full-name /name!")
+    await message.answer(f"Hello, NY -> {command.args.split()}")
 
-# we can use
-# F.text
-# F.animation
-# F.photo
-# F.sticker
-# F.video
-# F.new_chat_members
-
+# # we can use
+# # F.text
+# # F.animation
+# # F.photo
+# # F.sticker
+# # F.video
+# # F.new_chat_members
+#
 
 @router.message(F.text)
 async def echo_handler(message: types.Message) -> None:
     try:
         await message.reply("F.text reply")
+    except TypeError:
+        await message.answer("Nice try!")
+
+
+@router.message(F.photo)
+async def echo_handler(message: types.Message) -> None:
+    try:
+        await message.reply("F.photo reply")
     except TypeError:
         await message.answer("Nice try!")
 
