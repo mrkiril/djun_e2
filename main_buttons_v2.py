@@ -4,11 +4,10 @@ import logging
 import asyncio
 
 from aiogram import Bot, Dispatcher, Router, types
-from aiogram.filters import Command, CommandObject
+from aiogram.filters import Command, CommandObject, Text
 from aiogram.types import Message
 from dotenv import load_dotenv
 from aiogram import html
-from aiogram.filters import Text
 from aiogram import F
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
@@ -31,16 +30,56 @@ async def cmd_start(message: types.Message):
     kb = [
         [
             types.KeyboardButton(text="З пюрешкою"),
-            types.KeyboardButton(text="Без пюрешки"),
+            types.KeyboardButton(text="З окрошкою"),
+            types.KeyboardButton(text="З борщем"),
+
         ],
+        [
+            types.KeyboardButton(text="Без пюрешки"),
+            types.KeyboardButton(text="Без окрошки"),
+            types.KeyboardButton(text="Без борщу"),
+        ]
     ]
 
     keyboard = types.ReplyKeyboardMarkup(
         keyboard=kb,
         resize_keyboard=False,
+        one_time_keyboard=True,
         input_field_placeholder="Виберіть спосіб подачі",
     )
     await message.answer("Як подавати котлети?", reply_markup=keyboard)
+
+
+@router.message(Text(startswith="З"))
+async def cmd_start1(message: types.Message):
+     await message.reply("ЗБС")
+
+
+@router.message(Text(startswith="Без"))
+async def cmd_start2(message: types.Message):
+     await message.reply("Так не смачно")
+
+
+@router.message(Command("reply_builder"))
+async def reply_builder(message: types.Message, command: CommandObject):
+    num = int(command.args)
+    print(f"{num=}")
+    builder = ReplyKeyboardBuilder()
+    builder.add(
+        types.KeyboardButton(text="USD"),
+        types.KeyboardButton(text="EUR"),
+        types.KeyboardButton(text="KRN"),
+        types.KeyboardButton(text="ZLT"),
+        types.KeyboardButton(text="GBP"),
+        types.KeyboardButton(text="YPI"),
+        types.KeyboardButton(text="BTC"),
+        types.KeyboardButton(text="ETH"),
+    )
+    builder.adjust(3, 2)
+    await message.answer(
+        "Виберіть число:",
+        reply_markup=builder.as_markup(resize_keyboard=False, one_time_keyboard=True),
+    )
 
 
 async def main() -> None:
