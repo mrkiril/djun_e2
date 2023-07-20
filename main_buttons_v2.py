@@ -82,6 +82,37 @@ async def reply_builder(message: types.Message, command: CommandObject):
     )
 
 
+DATA_DICT = {
+    "USD": {
+        "EUR": 0.9,
+        "KRN": 13.03,
+        "ZLT": 13.03,
+        "GBP": 13.03,
+        "YPI": 13.03,
+    },
+    "EUR": {
+        "USD": 1.1,
+        "KRN": 13.03,
+        "ZLT": 13.03,
+        "GBP": 13.03,
+        "YPI": 13.03,
+    },
+    "KRN": {},
+    "ZLT": {},
+    "GBP": {},
+    "YPI": {}
+}
+
+
+DATA_LIST = [
+    {"currency": ("USD", "UAH"), "val": 45.03},
+    {"currency": ("USD", "EUR"), "val": 0.9},
+    {"currency": ("USD", "GBP"), "val": 0.8},
+    {"currency": ("USD", "ZLT"), "val": 5.7},
+    {"currency": ("UAH", "YPI"), "val": 12.0},
+]
+
+
 async def main() -> None:
     # ... and all other routers should be attached to Dispatcher
     dp.include_router(router)
