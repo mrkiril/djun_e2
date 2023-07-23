@@ -4,6 +4,7 @@ from typing import List, AnyStr
 
 class Settings(BaseSettings):
     bot_token: SecretStr
+    db_name: str = "currency_db.sqlite"
 
     class Config:
         env_file = '.env'
