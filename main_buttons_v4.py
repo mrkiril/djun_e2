@@ -51,6 +51,7 @@ def clear_table():
 
 
 def insert_currency(curr_from: str, curr_to: str, value: float):
+    # TODO: use cur.executemany("INSERT INTO movie VALUES(?, ?, ?)", data)
     text = f"""
         INSERT INTO currency (from_currency, to_currency, value, created_at)
         VALUES ('{curr_from}', '{curr_to}', {value}, datetime('now'));
@@ -65,28 +66,51 @@ def add_currency_data():
     insert_currency("USD", "GBP", 0.86)
 
 
-def get_unique_select_from_data() -> list[str]:
-    text = "select DISTINCT from_currency from currency"
+def get_unique_from_currency_data() -> list[str]:
+    text = "select DISTINCT from_currency from currency;"
     response = cursor.execute(text)
     data = response.fetchall()  # [("USD",), ("EUR",)]
     return [uniq_curr[0] for uniq_curr in data]  # ["USD", "EUR", ...]
 
 
 @router.message(Command("start"))
-async def reply_builder(message: types.Message):
+async def first_keyboard(message: types.Message):
     builder = ReplyKeyboardBuilder()
 
-    uniq_curr_from = []
-    for curr_from in get_unique_select_from_data():
-        if curr_from not in uniq_curr_from:
-            uniq_curr_from.append(curr_from)
-            builder.add(types.KeyboardButton(text=curr_from))
+    for curr_from in get_unique_from_currency_data():
+        builder.add(types.KeyboardButton(text=curr_from))
 
     builder.adjust(4)
     await message.answer(
         "Виберіть число:",
         reply_markup=builder.as_markup(resize_keyboard=False, one_time_keyboard=True),
     )
+
+
+@router.message(F.text)
+async def second_keyboard(message: types.Message):
+    builder = ReplyKeyboardBuilder()
+
+    if "->" in message.text:
+        # message.text = "USD -> UAH"
+        from_currency, to_currency = message.text.split(" -> ")
+        resp = cursor.execute(f"select value from currency where from_currency = '{from_currency}' and to_currency = '{to_currency}';")
+        value = resp.fetchone()
+        await message.answer(f"Currency {message.text} = {value[0]}")
+        return
+
+    from_currency = message.text
+    for to_currency_tuple in cursor.execute(f"select to_currency from currency where from_currency = '{message.text}';"):
+        # [("EUR"), ("UAH",), ...]
+        to_currency = to_currency_tuple[0]
+        builder.add(types.KeyboardButton(text=f"{from_currency} -> {to_currency}"))
+
+    builder.adjust(4)
+    await message.answer(
+        "Виберіть валюту для конвертації:",
+        reply_markup=builder.as_markup(resize_keyboard=False, one_time_keyboard=True),
+    )
+
 
 
 # DATA_LIST = [
