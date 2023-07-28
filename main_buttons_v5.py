@@ -6,6 +6,8 @@ import sqlite3
 
 from aiogram import Bot, Dispatcher, Router, types
 from aiogram.filters import Command, CommandObject, Text
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message
 from dotenv import load_dotenv
 from aiogram import html
@@ -28,6 +30,13 @@ router = Router()
 #
 con = sqlite3.connect(config.db_name)
 cursor = con.cursor()
+
+
+class CurrencyState(StatesGroup):
+    first_select = State()
+    second_select = State()
+
+# await state.set_state(CurrencyState.first_select)
 
 
 def create_table():
@@ -74,7 +83,7 @@ def get_unique_from_currency_data() -> list[str]:
 
 
 @router.message(Command("start"))
-async def first_keyboard(message: types.Message):
+async def first_keyboard(message: types.Message, state: FSMContext):
     builder = ReplyKeyboardBuilder()
 
     for curr_from in get_unique_from_currency_data():
@@ -82,23 +91,15 @@ async def first_keyboard(message: types.Message):
 
     builder.adjust(4)
     await message.answer(
-        "Виберіть число:",
+        "Виберіть валюту:",
         reply_markup=builder.as_markup(resize_keyboard=False, one_time_keyboard=True),
     )
+    await state.set_state(CurrencyState.first_select)
 
 
-@router.message(F.text)
-async def second_keyboard(message: types.Message):
+@router.message(CurrencyState.first_select)
+async def second_keyboard(message: types.Message, state: FSMContext):
     builder = ReplyKeyboardBuilder()
-
-    if "->" in message.text:
-        # message.text = "USD -> UAH"
-        from_currency, to_currency = message.text.split(" -> ")
-        resp = cursor.execute(f"select value from currency where from_currency = '{from_currency}' and to_currency = '{to_currency}';")
-        value = resp.fetchone()
-        await message.answer(f"Currency {message.text} = {value[0]}")
-        return
-
     from_currency = message.text
     for to_currency_tuple in cursor.execute(f"select to_currency from currency where from_currency = '{message.text}';"):
         # [("EUR"), ("UAH",), ...]
@@ -110,16 +111,32 @@ async def second_keyboard(message: types.Message):
         "Виберіть валюту для конвертації:",
         reply_markup=builder.as_markup(resize_keyboard=False, one_time_keyboard=True),
     )
+    await state.set_state(CurrencyState.second_select)
 
 
-
-# DATA_LIST = [
-#     {"currency": ("USD", "UAH"), "val": 45.03},
-#     {"currency": ("USD", "EUR"), "val": 0.9},
-#     {"currency": ("USD", "GBP"), "val": 0.8},
-#     {"currency": ("USD", "ZLT"), "val": 5.7},
-#     {"currency": ("UAH", "YPI"), "val": 12.0},
-# ]
+# @router.message(F.text)
+# async def second_keyboard(message: types.Message):
+#     builder = ReplyKeyboardBuilder()
+#
+#     if "->" in message.text:
+#         # message.text = "USD -> UAH"
+#         from_currency, to_currency = message.text.split(" -> ")
+#         resp = cursor.execute(f"select value from currency where from_currency = '{from_currency}' and to_currency = '{to_currency}';")
+#         value = resp.fetchone()
+#         await message.answer(f"Currency {message.text} = {value[0]}")
+#         return
+#
+#     from_currency = message.text
+#     for to_currency_tuple in cursor.execute(f"select to_currency from currency where from_currency = '{message.text}';"):
+#         # [("EUR"), ("UAH",), ...]
+#         to_currency = to_currency_tuple[0]
+#         builder.add(types.KeyboardButton(text=f"{from_currency} -> {to_currency}"))
+#
+#     builder.adjust(4)
+#     await message.answer(
+#         "Виберіть валюту для конвертації:",
+#         reply_markup=builder.as_markup(resize_keyboard=False, one_time_keyboard=True),
+#     )
 
 
 async def main() -> None:
