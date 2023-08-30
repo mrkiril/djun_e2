@@ -36,6 +36,15 @@ class CurrencyState(StatesGroup):
     first_select = State()
     second_select = State()
 
+
+# class CurrencyState(StatesGroup):
+#     a_state1_b_state1 = State()
+#     a_state2_b_state1 = State()
+#     a_state1_b_state2 = State()
+#     a_state3_b_state2 = State()
+#     a_state4_b_state2 = State()
+
+
 # await state.set_state(CurrencyState.first_select)
 
 
